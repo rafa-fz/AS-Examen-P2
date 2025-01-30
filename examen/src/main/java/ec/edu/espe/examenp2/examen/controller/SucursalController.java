@@ -1,8 +1,10 @@
 package ec.edu.espe.examenp2.examen.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ec.edu.espe.examenp2.examen.controller.dto.FeriadoDTO;
 import ec.edu.espe.examenp2.examen.controller.dto.SucursalDTO;
 import ec.edu.espe.examenp2.examen.controller.mapper.SucursalMapper;
+import ec.edu.espe.examenp2.examen.model.Sucursal;
 import ec.edu.espe.examenp2.examen.service.SucursalService;
 
 @RestController
@@ -26,8 +29,6 @@ public class SucursalController {
     private final SucursalService service;
     private final SucursalMapper mapper;
 
-
-
     public SucursalController(SucursalService service, SucursalMapper mapper) {
         this.service = service;
         this.mapper = mapper;
@@ -35,49 +36,48 @@ public class SucursalController {
 
     @GetMapping
     public ResponseEntity<List<SucursalDTO>> getAllSucursales() {
-        List<SucursalDTO> sucursales = service.getAllSucursales();
-        return ResponseEntity.ok(sucursales);
+        try {
+            List<Sucursal> sucursales = this.service.findAll();
+            List<SucursalDTO> dtos = new ArrayList<>(sucursales.size());
+
+            for (Sucursal sucursal : sucursales) {
+                dtos.add(mapper.toDTO(sucursal));
+            }
+            return ResponseEntity.ok(dtos);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping
     public ResponseEntity<SucursalDTO> createSucursal(@RequestBody SucursalDTO sucursalDTO) {
-        SucursalDTO createdSucursal = service.createSucursal(sucursalDTO);
-        return ResponseEntity.ok(createdSucursal);
+
+        return ResponseEntity.ok().build();
+
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SucursalDTO> getSucursalById(@PathVariable String id) {
-        Optional<SucursalDTO> sucursal = service.getSucursalById(id);
-        return sucursal.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<SucursalDTO> getSucursalById(@PathVariable("id") String id) {
+        try {
+            Sucursal sucursal = this.service.findById(id);
+            return ResponseEntity.ok(this.mapper.toDTO(sucursal));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SucursalDTO> updateSucursal(@PathVariable String id, @RequestBody SucursalDTO sucursalDTO) {
-        Optional<SucursalDTO> updatedSucursal = service.updateSucursal(id, sucursalDTO);
-        return updatedSucursal.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+
+        rreturn ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/feriados")
-    public ResponseEntity<FeriadoDTO> createFeriado(@PathVariable String id, @RequestBody FeriadoDTO feriadoDTO) {
-        FeriadoDTO createdFeriado = service.createFeriado(id, feriadoDTO);
-        return ResponseEntity.ok(createdFeriado);
+    public ResponseEntity <feriadoDTO> create(@RequestBody String entity) {
+        
+        rreturn ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{id}/feriados/{feriadoId}")
-    public ResponseEntity<Void> deleteFeriado(@PathVariable String id, @PathVariable String feriadoId) {
-        service.deleteFeriado(id, feriadoId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{id}/feriados")
-    public ResponseEntity<List<FeriadoDTO>> getFeriadosBySucursal(@PathVariable String id) {
-        List<FeriadoDTO> feriados = service.getFeriadosBySucursal(id);
-        return ResponseEntity.ok(feriados);
-    }
-
-    @GetMapping("/{id}/feriados/verificar")
-    public ResponseEntity<Boolean> isFeriado(@PathVariable String id, @RequestParam String date) {
-        boolean isFeriado = service.isFeriado(id, date);
-        return ResponseEntity.ok(isFeriado);
-    }
 }
